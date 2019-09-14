@@ -52,6 +52,15 @@ with lib;
       description = "Environment variable name value pairs.";
     };
 
+    variableSets = mkOption {
+      type = types.attrsOf (types.attrsOf types.str);
+      default = {};
+      description = ''
+        You can activate a variable set's environment variables using the
+        `switchTo <SET_NAME>` command.
+      '';
+    };
+
   };
 
   config = {
@@ -67,9 +76,33 @@ with lib;
       }
     ];
 
-    scripts = mkIf config.subcommander.enable {
-      "${config.subcommander.alias}" = ''exec subcommander "$@"'';
-    };
+    scripts = mkMerge [
+
+      (mkIf config.subcommander.enable {
+        "${config.subcommander.alias}" = ''exec subcommander "$@"'';
+      })
+
+      {
+        "switchTo" = let
+          setToExports = set: concatStringsSep "\n" (attrValues (mapAttrs (n: v: ''${n}="${v}"'') set)) + "\nexport ${concatStringsSep " " (attrNames set)}";
+        in ''
+          set -e
+          case "$1" in
+          ${concatMapStringsSep "\n" (n: ''
+          ${n})
+            ${setToExports config.variableSets."${n}"}
+            exec "$SHELL"
+            ;;
+          '') (attrNames config.variableSets)}
+          *)
+            echo "Please give one of the following variable sets as an argument to switch to it:"
+            ${concatMapStringsSep "\n" (n: "echo ${n}") (attrNames config.variableSets)}
+            ;;
+          esac
+        '';
+      }
+
+    ];
 
   };
 }

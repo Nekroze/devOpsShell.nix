@@ -30,4 +30,7 @@ in devOpsShell {
     nix-prefetch-git https://github.com/nixos/nixpkgs-channels.git refs/heads/${pinnedChannel} \
       > "$(git rev-parse --show-toplevel)/.nixpkgs-version.json"
   '';
+
+  variableSets.dev.TARGET = "local";
+  variableSets.prod.TARGET = "cloud";
 }

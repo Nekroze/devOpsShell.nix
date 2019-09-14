@@ -45,7 +45,7 @@ with lib;
       ++ attrValues (mapAttrs writeShellScriptBin config.scripts);
 
       shellHook = ''
-        ${concatStringsSep "\n" (attrValues (mapAttrs (n: v: ''export ${n}="${v}"'') config.environment))}
+        ${concatStringsSep "\n" (attrValues (mapAttrs (n: v: ''export ${n}="${v}"'') config.variables))}
       '';
     };
   };

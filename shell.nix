@@ -24,7 +24,7 @@ in devOpsShell {
     nix-prefetch-git
   ];
 
-  environment.TEST = "foo";
+  variables.TEST = "foo";
 
   scripts.updateNixpkgs = ''
     nix-prefetch-git https://github.com/nixos/nixpkgs-channels.git refs/heads/${pinnedChannel} \

@@ -46,7 +46,7 @@ with lib;
       description = "List of packages to install in the shell.";
     };
 
-    environment = mkOption {
+    variables = mkOption {
       type = types.attrsOf types.str;
       default = {};
       description = "Environment variable name value pairs.";
@@ -56,7 +56,7 @@ with lib;
 
   config = {
 
-    environment = mkMerge [
+    variables = mkMerge [
       (mkIf config.subcommander.enable {
         APPLICATION = config.subcommander.alias;
         SUBCOMMANDS = config.subcommander.path;

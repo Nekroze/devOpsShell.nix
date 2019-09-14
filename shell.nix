@@ -18,12 +18,11 @@ with pkgs;
 let
   devOpsShell = import ./default.nix {inherit pkgs;};
 in devOpsShell {
+  subcommander.enable = true;
 
   packages = [
     nix-prefetch-git
   ];
-
-  subcommander = true;
 
   environment.TEST = "foo";
 

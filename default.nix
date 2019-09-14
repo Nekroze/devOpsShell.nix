@@ -13,6 +13,7 @@ let
         _module.args.lib = lib;
       }
       ./options.nix
+      ./modules/mkShell.nix
       mainModule
     ];
   };

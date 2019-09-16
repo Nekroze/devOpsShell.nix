@@ -5,10 +5,16 @@ with lib;
 
 {
   options = {
+    prompt = {
+      enable = mkEnableOption ''
+        Take control of the $PS1 environment variable to use a custom prompt.
+      '';
+    };
+
 
     subcommander = {
       enable = mkEnableOption ''
-        Dispatcher for executing scripts as a tree of subcommands represented
+        dispatcher for executing scripts as a tree of subcommands represented
         by directories and files.
       '';
 
@@ -70,9 +76,11 @@ with lib;
         APPLICATION = config.subcommander.alias;
         SUBCOMMANDS = config.subcommander.path;
       })
+      (mkIf config.prompt.enable {
+        PS1 = ''\[\e[0;32m\]''${variableSet:-\u}\[\e[0;35m\]@\[\e[0;36m\]devOpsShell.\[\e[0;36m\]\h\[\e[0;35m\]:\[\e[0;33m\]\W \[\e[0;35m\]$ \[\e[0m\]'';
+      })
       {
         NIX_SHELL_ROOT = "$PWD";
-        PS1 = ''\[\e[0;32m\]\u\[\e[0;35m\]@\[\e[0;36m\]devOpsShell.\[\e[0;36m\]\h\[\e[0;35m\]:\[\e[0;33m\]\W \[\e[0;35m\]$ \[\e[0m\]'';
       }
     ];
 

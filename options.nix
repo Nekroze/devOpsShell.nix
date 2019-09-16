@@ -90,6 +90,7 @@ with lib;
           case "$1" in
           ${concatMapStringsSep "\n" (n: ''
           ${n})
+            export variableSet="${n}"
             ${setToExports config.variableSets."${n}"}
             exec "$SHELL"
             ;;

@@ -5,12 +5,6 @@ with lib;
 
 {
   options = {
-    prompt = {
-      enable = mkEnableOption ''
-        Take control of the $PS1 environment variable to use a custom prompt.
-      '';
-    };
-
 
     subcommander = {
       enable = mkEnableOption ''
@@ -67,6 +61,22 @@ with lib;
       '';
     };
 
+    variableSetDefault = mkOption {
+      type = types.str;
+      default = "dev";
+      description = ''
+        Which variable set should be activated initially.
+      '';
+    };
+
+    verbose = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Call out actions and variable changes where possible.
+      '';
+    };
+
   };
 
   config = {
@@ -76,11 +86,9 @@ with lib;
         APPLICATION = config.subcommander.alias;
         SUBCOMMANDS = config.subcommander.path;
       })
-      (mkIf config.prompt.enable {
-        PS1 = ''\[\e[0;32m\]''${variableSet:-\u}\[\e[0;35m\]@\[\e[0;36m\]devOpsShell.\[\e[0;36m\]\h\[\e[0;35m\]:\[\e[0;33m\]\W \[\e[0;35m\]$ \[\e[0m\]'';
-      })
       {
         NIX_SHELL_ROOT = "$PWD";
+        PS1 = ''\[\e[0;32m\]''${variableSet:-\u}\[\e[0;35m\]@\[\e[0;36m\]devOpsShell.\[\e[0;36m\]\h\[\e[0;35m\]:\[\e[0;33m\]\W \[\e[0;35m\]$ \[\e[0m\]'';
       }
     ];
 
@@ -91,18 +99,20 @@ with lib;
       })
 
       {
-        "switchTo" = let
-          setToExports = set: concatStringsSep "\n" (attrValues (mapAttrs (n: v: ''${n}="${v}"'') set)) + "\nexport ${concatStringsSep " " (attrNames set)}";
-        in ''
-          set -e
+        # Helper for pretty printing in large text important information.
+        shout = ''
+          exec ${pkgs.toilet}/bin/toilet --font future "$*"
+        '';
+        # This version of switch to is a shim for shells that do not get
+        # functions from the shellHook.
+        switchTo = ''
           case "$1" in
-          ${concatMapStringsSep "\n" (n: ''
-          ${n})
-            export variableSet="${n}"
-            ${setToExports config.variableSets."${n}"}
-            exec "$SHELL"
+          ${concatStringsSep "|" (attrNames config.variableSets)})
+            cd $NIX_SHELL_ROOT
+            switches=
+            [ -z "$IN_NIX_SHELL" ] || switches=--pure
+            exec env DEVOPSSHELL_SWITCHTO="$1" nix-shell $switches
             ;;
-          '') (attrNames config.variableSets)}
           *)
             echo "Please give one of the following variable sets as an argument to switch to it:"
             ${concatMapStringsSep "\n" (n: "echo ${n}") (attrNames config.variableSets)}
@@ -112,6 +122,38 @@ with lib;
       }
 
     ];
+
+    _mkShell.shellHook = let
+      kvToExport = name: value: ''
+        ${name}="${value}"
+        echo "${name}=${value}"
+      '';
+      setToExports = set: concatStringsSep "\n" (attrValues (mapAttrs kvToExport set)) + "\nexport ${concatStringsSep " " (attrNames set)}";
+    in ''
+      switchTo() {
+        case "''${1:-${config.variableSetDefault}}" in
+        ${concatMapStringsSep "\n" (n: ''
+        ${n})
+          # TODO: Remove janky use of GPG_TTY to detect direnv auto entering nix-shell
+          [ -z "$GPG_TTY" ] || shout "Activating variableSet: $1"
+          export variableSet="${n}"
+          ${setToExports config.variableSets."${n}"}
+          export PS1="${config.variables.PS1}"
+          ;;
+        '') (attrNames config.variableSets)}
+        *)
+          true
+          ;;
+        esac
+      }
+
+      if [ -n "$DEVOPSSHELL_SWITCHTO" ]; then
+          switchTo "$DEVOPSSHELL_SWITCHTO"
+      else
+          switchTo ${config.variableSetDefault}
+      fi
+    '';
+
 
   };
 }

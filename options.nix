@@ -99,10 +99,6 @@ with lib;
       })
 
       {
-        # Helper for pretty printing in large text important information.
-        shout = ''
-          exec ${pkgs.toilet}/bin/toilet --font future "$*"
-        '';
         # This version of switch to is a shim for shells that do not get
         # functions from the shellHook.
         switchTo = ''
@@ -111,7 +107,7 @@ with lib;
             cd $NIX_SHELL_ROOT
             switches=
             [ -z "$IN_NIX_SHELL" ] || switches=--pure
-            exec env DEVOPSSHELL_SWITCHTO="$1" nix-shell $switches
+            exec env DEVOPSSHELL_SWITCHTO="$1" nix-shell --keep DEVOPSSHELL_SWITCHTO $switches
             ;;
           *)
             echo "Please give one of the following variable sets as an argument to switch to it:"
@@ -125,24 +121,33 @@ with lib;
 
     _mkShell.shellHook = let
       kvToExport = name: value: ''
+        echo '${name}=${value}'
         ${name}="${value}"
-        echo "${name}=${value}"
       '';
-      setToExports = set: concatStringsSep "\n" (attrValues (mapAttrs kvToExport set)) + "\nexport ${concatStringsSep " " (attrNames set)}";
+      setToExports = set: concatStringsSep "\n" (attrValues (mapAttrs kvToExport set)) + ''
+        export ${concatStringsSep " " (attrNames set)}
+      '';
+      shoutCmd = "${pkgs.toilet}/bin/toilet --font future";
     in ''
       switchTo() {
         case "''${1:-${config.variableSetDefault}}" in
         ${concatMapStringsSep "\n" (n: ''
         ${n})
           # TODO: Remove janky use of GPG_TTY to detect direnv auto entering nix-shell
-          [ -z "$GPG_TTY" ] || shout "Activating variableSet: $1"
+          if [ -z "$GPG_TTY" ]; then
+            echo "
+              ${shoutCmd} 'Activating variableSet: $1';
+            "
+          else
+            ${shoutCmd} "Activating variableSet: $1"
+          fi
           export variableSet="${n}"
           ${setToExports config.variableSets."${n}"}
           export PS1="${config.variables.PS1}"
           ;;
         '') (attrNames config.variableSets)}
         *)
-          true
+          false
           ;;
         esac
       }

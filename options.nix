@@ -77,6 +77,9 @@ with lib;
       '';
     };
 
+    exportNixPath = mkEnableOption "setting $NIX_PATH to the pinned nixpkgs version";
+    workingDirNixPath = mkEnableOption "adding the current working directory to $NIX_PATH, useful for NixOps";
+
   };
 
   config = {
@@ -131,6 +134,9 @@ with lib;
       '';
       shoutCmd = "${pkgs.toilet}/bin/toilet --font future";
     in ''
+      ${optionalString config.exportNixPath "export NIX_PATH=${pkgs.path}:nixpkgs=${pkgs.path}"}
+      ${optionalString config.workingDirNixPath "export NIX_PATH=$NIX_PATH:$NIX_SHELL_ROOT"}
+
       switchTo() {
         case "''${1:-${config.variableSetDefault}}" in
         ${concatMapStringsSep "\n" (n: ''

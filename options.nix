@@ -103,12 +103,14 @@ with lib;
         # functions from the shellHook.
         switchTo = ''
           case "$1" in
+          ${optionalString (config.variableSets != {}) ''
           ${concatStringsSep "|" (attrNames config.variableSets)})
             cd $NIX_SHELL_ROOT
             switches=
             [ -z "$IN_NIX_SHELL" ] || switches=--pure
             exec env DEVOPSSHELL_SWITCHTO="$1" nix-shell --keep DEVOPSSHELL_SWITCHTO $switches
             ;;
+          ''}
           *)
             echo "Please give one of the following variable sets as an argument to switch to it:"
             ${concatMapStringsSep "\n" (n: "echo ${n}") (attrNames config.variableSets)}
@@ -147,7 +149,7 @@ with lib;
           ;;
         '') (attrNames config.variableSets)}
         *)
-          false
+          true
           ;;
         esac
       }

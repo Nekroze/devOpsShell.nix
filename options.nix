@@ -126,7 +126,7 @@ with lib;
 
     _mkShell.shellHook = let
       kvToExport = name: value: ''
-        echo '${name}=${value}'
+        echo '${name}="${value}"'
         ${name}="${value}"
       '';
       setToExports = set: concatStringsSep "\n" (attrValues (mapAttrs kvToExport set)) + ''

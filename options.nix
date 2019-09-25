@@ -127,12 +127,12 @@ with lib;
     _mkShell.shellHook = let
       kvToExport = name: value: ''
         echo '${name}=${value}'
-        ${name}="${value}"
+        ${name}=${value}
       '';
       setToExports = set: concatStringsSep "\n" (attrValues (mapAttrs kvToExport set)) + ''
         export ${concatStringsSep " " (attrNames set)}
       '';
-      shoutCmd = "${pkgs.toilet}/bin/toilet --font future";
+      shoutCmd = "${pkgs.toilet}/bin/toilet --termwidth --font future";
     in ''
       ${optionalString config.exportNixPath "export NIX_PATH=${pkgs.path}:nixpkgs=${pkgs.path}"}
       ${optionalString config.workingDirNixPath "export NIX_PATH=$NIX_PATH:$NIX_SHELL_ROOT"}

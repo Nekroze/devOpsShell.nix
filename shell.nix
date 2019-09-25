@@ -23,6 +23,5 @@ in devOpsShell {
 
   variableSets.dev.TARGET = "local";
   variableSets.prod.TARGET = "cloud";
-  variableSets.dev.CONTEXTS = "( foo bar )";
   exportNixPath = true;
 }

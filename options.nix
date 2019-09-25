@@ -135,7 +135,7 @@ with lib;
       shoutCmd = "${pkgs.toilet}/bin/toilet --termwidth --font future";
     in ''
       ${optionalString config.exportNixPath "export NIX_PATH=${pkgs.path}:nixpkgs=${pkgs.path}"}
-      ${optionalString config.workingDirNixPath "export NIX_PATH=$NIX_PATH:$NIX_SHELL_ROOT"}
+      ${optionalString config.workingDirNixPath "export NIX_PATH=$NIX_PATH:$PWD"}
 
       switchTo() {
         case "''${1:-${config.variableSetDefault}}" in

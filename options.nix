@@ -155,7 +155,7 @@ with lib;
           ;;
         '') (attrNames config.variableSets)}
         *)
-          true
+          echo "variableSet: $1 is not defined!" 1>&2
           ;;
         esac
       }
@@ -166,7 +166,6 @@ with lib;
           switchTo ${config.variableSetDefault}
       fi
     '';
-
 
   };
 }

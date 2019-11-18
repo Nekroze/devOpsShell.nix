@@ -1,13 +1,15 @@
 { channel ? "nixpkgs-unstable", versionFile }:
 
-let
+rec {
   version = builtins.fromJSON (builtins.readFile versionFile);
-in rec {
-  pkgs = import (builtins.fetchGit {
+
+  src = builtins.fetchGit {
     inherit (version) url rev;
 
     ref = channel;
-  }) {};
+  };
+
+  pkgs = import src {};
 
   updateScript = ''
     ${pkgs.nix-prefetch-git}/bin/nix-prefetch-git \

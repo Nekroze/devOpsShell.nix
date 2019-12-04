@@ -38,11 +38,28 @@ with lib;
       sha256 = "03mwcp67bl7z6zibgz14z7qr8xwmlfcpk1a8xfskf4jbrqqgv9ks";
     }) {};
 
+
+    writeAndCheckShellScriptBin = name: text: writeTextFile {
+      inherit name;
+      executable = true;
+      destination = "/bin/${name}";
+      text = ''
+        #!${runtimeShell}
+        ${text}
+      '';
+      checkPhase = let
+        sc = "${config.shellcheck.package}/bin/shellcheck";
+        opts = concatStringsSep " " config.shellcheck.switches;
+      in "${sc} ${opts} $out/bin/${name}";
+    };
+
+    scriptBuilderFunc = if config.shellcheck.enable then writeAndCheckShellScriptBin else writeShellScriptBin;
+
   in {
     _mkShell = {
       buildInputs = config.packages
       ++ optional config.subcommander.enable subcommanderPkg
-      ++ attrValues (mapAttrs writeShellScriptBin config.scripts);
+      ++ attrValues (mapAttrs scriptBuilderFunc config.scripts);
 
       shellHook = ''
         ${concatStringsSep "\n" (attrValues (mapAttrs (n: v: ''export ${n}="${v}"'') config.variables))}

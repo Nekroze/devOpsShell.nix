@@ -40,6 +40,22 @@ with lib;
       '';
     };
 
+    shellcheck = {
+      enable = mkEnableOption "checking all `scripts` with shellcheck for safety.";
+
+      package = mkOption {
+        type = types.path;
+        default = pkgs.shellcheck;
+        description = "The shellcheck package to use when checking `scripts`.";
+      };
+
+      switches = mkOption {
+        type = types.listOf types.str;
+        default = ["--exclude" "SC1008" "--external-sources" "--color"];
+        description = "Options or flags to pass to shellcheck before the file name to check.";
+      };
+    };
+
     packages = mkOption {
       type = types.listOf types.path;
       default = [];
@@ -108,7 +124,7 @@ with lib;
           case "$1" in
           ${optionalString (config.variableSets != {}) ''
           ${concatStringsSep "|" (attrNames config.variableSets)})
-            cd $NIX_SHELL_ROOT
+            cd "$NIX_SHELL_ROOT" || exit 1
             switches=
             [ -z "$IN_NIX_SHELL" ] || switches=--pure
             exec env DEVOPSSHELL_SWITCHTO="$1" nix-shell --keep DEVOPSSHELL_SWITCHTO $switches

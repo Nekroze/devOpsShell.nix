@@ -20,6 +20,7 @@ in devOpsShell {
   variables.TEST = "foo";
 
   scripts.updateNixpkgs = pinned.updateScript;
+  shellcheck.enable = true;
 
   variableSets.dev.TARGET = "local";
   variableSets.prod.TARGET = "cloud";

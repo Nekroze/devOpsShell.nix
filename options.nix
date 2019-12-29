@@ -78,8 +78,8 @@ with lib;
     };
 
     variableSetDefault = mkOption {
-      type = types.str;
-      default = "dev";
+      type = types.nullOr types.str;
+      default = null;
       description = ''
         Which variable set should be activated initially.
       '';
@@ -153,6 +153,7 @@ with lib;
       ${optionalString config.exportNixPath "export NIX_PATH=${pkgs.path}:nixpkgs=${pkgs.path}"}
       ${optionalString config.workingDirNixPath "export NIX_PATH=$NIX_PATH:$PWD"}
 
+      ${optionalString (config.variableSets != {}) ''
       switchTo() {
         case "''${1:-${config.variableSetDefault}}" in
         ${concatMapStringsSep "\n" (n: ''
@@ -181,6 +182,7 @@ with lib;
       else
           switchTo ${config.variableSetDefault}
       fi
+      ''}
     '';
 
   };

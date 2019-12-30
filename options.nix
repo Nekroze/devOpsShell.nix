@@ -153,7 +153,7 @@ with lib;
       ${optionalString config.exportNixPath "export NIX_PATH=${pkgs.path}:nixpkgs=${pkgs.path}"}
       ${optionalString config.workingDirNixPath "export NIX_PATH=$NIX_PATH:$PWD"}
 
-      ${optionalString (config.variableSets != {}) ''
+      ${optionalString (config.variableSetDefault != null && config.variableSets != {}) ''
       switchTo() {
         case "''${1:-${config.variableSetDefault}}" in
         ${concatMapStringsSep "\n" (n: ''

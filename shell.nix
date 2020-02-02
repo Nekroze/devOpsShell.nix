@@ -25,4 +25,5 @@ in devOpsShell {
   variableSets.dev.TARGET = "local";
   variableSets.prod.TARGET = "cloud";
   exportNixPath = true;
+  certificateBundle = "${pinned.pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
 }

@@ -93,18 +93,44 @@ with lib;
       '';
     };
 
+    certificateBundle = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+      description = ''
+        If not null this path will be set as the value for various environment
+        variables defined in certificateBundleVariables to enable HTTPS.
+      '';
+    };
+
+    certificateBundleVariables = mkOption {
+      type = types.listOf types.str;
+      default = ["CURL_CA_BUNDLE" "GIT_SSL_CAINFO" "NIX_SSL_CERT_FILE" "SSL_CERT_FILE"];
+      description = ''
+        When certificateBundle is not null, these environment variables will be set to its value.
+      '';
+    };
+
     exportNixPath = mkEnableOption "setting $NIX_PATH to the pinned nixpkgs version";
     workingDirNixPath = mkEnableOption "adding the current working directory to $NIX_PATH, useful for NixOps";
-
   };
 
-  config = {
+  config = let
+    mkCertBundleVar = v: {
+      name  = v;
+      value = config.certificateBundle;
+    };
+    mkCertBundleVars = names: builtins.listToAttrs (map mkCertBundleVar names);
+  in {
 
     variables = mkMerge [
       (mkIf config.subcommander.enable {
         APPLICATION = config.subcommander.alias;
         SUBCOMMANDS = config.subcommander.path;
       })
+      (mkIf (config.certificateBundle != null)
+        (mkCertBundleVars config.certificateBundleVariables)
+      )
       {
         NIX_SHELL_ROOT = "$PWD";
         PS1 = ''\[\e[0;32m\]''${variableSet:-\u}\[\e[0;35m\]@\[\e[0;36m\]devOpsShell.\[\e[0;36m\]\h\[\e[0;35m\]:\[\e[0;33m\]\W \[\e[0;35m\]$ \[\e[0m\]'';

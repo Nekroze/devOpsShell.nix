@@ -159,6 +159,7 @@ with lib;
           *)
             echo "Please give one of the following variable sets as an argument to switch to it:"
             ${concatMapStringsSep "\n" (n: "echo ${n}") (attrNames config.variableSets)}
+            exit 1
             ;;
           esac
         '';
@@ -209,6 +210,12 @@ with lib;
           switchTo ${config.variableSetDefault}
       fi
       ''}
+
+      help() {
+        echo 'The following scripts have been exposed in this shell:' 1>&2
+        echo ${concatStringsSep " " (attrNames config.scripts)} | column -c 100 1>&2
+      }
+      help
     '';
 
   };

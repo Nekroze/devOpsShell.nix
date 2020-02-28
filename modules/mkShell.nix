@@ -59,7 +59,8 @@ with lib;
     _mkShell = {
       buildInputs = config.packages
       ++ optional config.subcommander.enable subcommanderPkg
-      ++ attrValues (mapAttrs scriptBuilderFunc config.scripts);
+      ++ attrValues (mapAttrs scriptBuilderFunc config.scripts)
+      ++ [unixtools.utillinux];
 
       shellHook = ''
         ${concatStringsSep "\n" (attrValues (mapAttrs (n: v: ''export ${n}="${v}"'') config.variables))}

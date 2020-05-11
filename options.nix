@@ -151,9 +151,7 @@ with lib;
           ${optionalString (config.variableSets != {}) ''
           ${concatStringsSep "|" (attrNames config.variableSets)})
             cd "$NIX_SHELL_ROOT" || exit 1
-            switches=
-            [ -z "$IN_NIX_SHELL" ] || switches=--pure
-            exec env DEVOPSSHELL_SWITCHTO="$1" nix-shell --keep DEVOPSSHELL_SWITCHTO $switches
+            exec env DEVOPSSHELL_SWITCHTO="$1" nix-shell --keep DEVOPSSHELL_SWITCHTO
             ;;
           ''}
           *)

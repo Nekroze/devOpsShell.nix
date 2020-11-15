@@ -1,7 +1,10 @@
-{ channel ? "nixpkgs-unstable", versionFile, nixpkgsRepo ? "https://github.com/nixos/nixpkgs" }:
+{ channel ? "nixpkgs-unstable", versionFile ? null, versionConfig ? null, nixpkgsRepo ? "https://github.com/nixos/nixpkgs" }:
 
-rec {
-  version = builtins.fromJSON (builtins.readFile versionFile);
+let
+  switchedVersionConfig = if versionConfig != null then versionConfig else builtins.fromJSON (builtins.readFile versionFile);
+  versionConfigOrFileProvided = (versionFile != null) || (versionConfig != null);
+in rec {
+  version = assert versionConfigOrFileProvided; switchedVersionConfig;
 
   src = builtins.fetchTarball {
     inherit (version) url sha256;
@@ -10,7 +13,9 @@ rec {
 
   pkgs = import src {};
 
-  updateScript = ''
+  updateScript = let
+    generatedVersionFile = builtins.toFile "version.json" (builtins.toJSON version);
+  in ''
     rev=$1
     if [ -z "$rev" ]; then
       rev=$(${pkgs.nix-prefetch-git}/bin/nix-prefetch-git \
@@ -22,6 +27,6 @@ rec {
     sha=$(${pkgs.nix}/bin/nix-prefetch-url --unpack \
       "$url" \
       | tr -d '[:space:]')
-    echo "{\"url\":\"$url\",\"sha256\":\"$sha\"}" | ${pkgs.jq}/bin/jq -r > '${toString versionFile}'
+    echo "{\"url\":\"$url\",\"sha256\":\"$sha\"}" | ${pkgs.jq}/bin/jq -r > '${toString generatedVersionFile}'
   '';
 }

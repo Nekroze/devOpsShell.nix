@@ -15,6 +15,7 @@ in rec {
 
   updateScript = let
     generatedVersionFile = builtins.toFile "version.json" (builtins.toJSON version);
+    newVersionFilePath = if versionFile != null then (toString versionFile) else "$NIX_SHELL_ROOT/.nixpkgs-version.json";
   in ''
     rev=$1
     if [ -z "$rev" ]; then
@@ -27,6 +28,8 @@ in rec {
     sha=$(${pkgs.nix}/bin/nix-prefetch-url --unpack \
       "$url" \
       | tr -d '[:space:]')
-    echo "{\"url\":\"$url\",\"sha256\":\"$sha\"}" | ${pkgs.jq}/bin/jq -r > '${toString generatedVersionFile}'
+    echo "{\"url\":\"$url\",\"sha256\":\"$sha\"}" | ${pkgs.jq}/bin/jq -r > '${newVersionFilePath}'
+    echo ${newVersionFilePath}
+    cat ${newVersionFilePath}
   '';
 }

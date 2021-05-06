@@ -211,7 +211,7 @@ with lib;
 
       help() {
         echo 'The following scripts have been exposed in this shell:' 1>&2
-        echo ${concatStringsSep " " (attrNames config.scripts)} | column -c 100 1>&2
+        echo ${concatStringsSep " " (attrNames config.scripts)} | ${unixtools.column}/bin/column -c 100 1>&2
       }
       help
     '';
